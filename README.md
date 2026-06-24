@@ -1,50 +1,46 @@
-# Use Drillable
+# drillable
 
-> **Renamed (2026-06-24):** this plugin was `use-drillable`. It is now **`cite`**, installed from the
-> `drillablehq/marketplace` marketplace (`/plugin install cite@drillable`). Old installs keep working;
-> reinstall under the new name to get updates.
-
-A Claude Code plugin that makes your **coding agent ground reference claims** in a real,
-[Drillable](https://drillable.com)-cited source instead of answering from memory — the MCP spec,
-agent & LLM practices, networking, units, and dozens more. So you stop prefixing prompts with
-"use drillable to…".
-
-This plugin is **reach only.** Claim *verification* is a separate product — **Drillable Check** —
-because Check is a service consumed from many surfaces (CLI, CI, IDEs, web), most of which aren't
-Claude Code. You don't bundle a service into a plugin; you call it. (Repo: `drillablehq/drillable-check`.)
-
-## What it installs
-
-| Component | Job |
-| --- | --- |
-| MCP connection (`.mcp.json`) | makes `verify` / `search` / `lookup` available to your agent |
-| Reach skill (`skills/drillable-reach`) | a model-invoked nudge: ground a reference claim before asserting it |
-
-That's the whole job — a *trigger* (the skill) + the *target* (the corpus connection). The skill is
-discretionary: it nudges a model that's willing to look something up. It deliberately does **not**
-try to catch confident-wrong claims — that needs Drillable Check's deterministic hook, which lives
-with that product.
-
-## Install
+**Ground your coding agent.** Install drillable and your agent *audits its own work against cited
+sources* instead of guessing — reference claims (the MCP spec, agent & LLM practices, networking,
+units, and ~100 more domains) get grounded against the corpus, and where there's no record it says
+**"no record"** instead of bluffing.
 
 ```
 /plugin marketplace add drillablehq/marketplace
-/plugin install cite@drillable
+/plugin install drillable@drillable
+/plugin enable drillable@drillable        # then /reload-plugins
 ```
 
-That one `drillable` marketplace also carries **drillable-context** (grounds your agent in *your
-own project's* facts) — install it too with `/plugin install context@drillable`. The
-marketplace is the same whichever repo you add it from. All the developer tools are at
-[drillable.com/dev](https://drillable.com/dev).
+No account, no key — the reference corpus is a no-auth gateway. That's the whole install; your agent
+is grounded.
 
-Ships **disabled** (`defaultEnabled: false`): it connects to an external service and your queries
-are logged as demand signal, so enabling it is an explicit choice.
+## The two ways to use it
 
-## Before publishing
+drillable is an **audit** tool — check the work against an independent source. Two timings:
+
+- **`/with-drillable`** — turn on **grounded mode**: the agent continuously checks its work against
+  drillable *as a solution emerges*. Use it when you're starting something technically tricky and want
+  the solution to rest on cited sources, not recall. You ignite it; the agent sustains it.
+- **`/audit`** — run a **post-hoc audit** on the solution it just produced: extract the checkable
+  claims, verify each against drillable, and report what holds, what's **corrected**, and what's an
+  unverified assumption to double-check.
+
+## Optionally: ground your *project's own* facts
+
+Point drillable at a folder of your markdown — docs, decisions, conventions — and it grounds your
+project's facts the same way (stops the agent contradicting choices you've already made). Runs locally;
+your files stay your source of truth:
 
 ```
-claude plugin validate ./ --strict
+claude mcp add drillable-context -- npx -y drillable-context --facts-dir /path/to/your/docs --name context
 ```
 
-Confirm each plugin resolves from its GitHub `source` in `marketplace.json` and the remote MCP
-`type`/`url` in `.mcp.json`.
+## Gate your dependencies in CI
+
+The same grounding, enforced on every PR: **[drillable check](https://github.com/drillablehq/check)**
+(`npx drillable-check` / `uses: drillablehq/check@v1`) audits your dependencies against the live
+registry + OSV — the deterministic, team-wide version of what the plugin does live.
+
+---
+
+Operated by Drillable LLC. The reference corpus: <https://drillable.com>.
